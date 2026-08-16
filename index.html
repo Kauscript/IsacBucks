@@ -290,7 +290,16 @@ tr:hover td{background:var(--blue-100);}
 
 .news-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px;}
 .news-card{background:var(--surface); border-radius:var(--radius-md); overflow:hidden; box-shadow:var(--shadow-sm); border:1px solid var(--line);}
-.news-img{width:100%; height:130px; object-fit:cover; background:var(--blue-100);}
+.news-img-wrap{position:relative;}
+.news-img{width:100%; height:130px; object-fit:cover; background:var(--blue-100); display:block;}
+.news-play-badge{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  background:rgba(10,23,48,.18); pointer-events:none;
+}
+.news-play-badge span{
+  width:38px; height:38px; border-radius:50%; background:rgba(10,23,48,.75); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:14px; padding-left:2px;
+}
 .news-body{padding:14px 16px;}
 .news-title{font-weight:700; font-size:14.5px; color:var(--navy-900);}
 .empty-state{text-align:center; padding:50px 20px; color:var(--ink-400);}
@@ -318,6 +327,24 @@ tr:hover td{background:var(--blue-100);}
 }
 .modal.modal-lg{max-width:600px; padding:0;}
 .modal-news-img{width:100%; height:260px; object-fit:cover; background:var(--blue-100); border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
+.modal-news-video{
+  position:relative; width:100%; padding-top:56.25%; background:#000;
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0; overflow:hidden;
+}
+.modal-news-video.modal-news-video-instagram{padding-top:125%; background:var(--surface);}
+.modal-news-video iframe, .modal-news-video video{
+  position:absolute; inset:0; width:100%; height:100%; border:0; background:#000;
+}
+.modal-news-video-fallback{
+  position:static; padding-top:0; height:220px; background:var(--navy-900);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; text-align:center; padding:26px 30px;
+}
+.modal-news-video-fallback .video-fallback-icon{
+  width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.12); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:16px; padding-left:2px;
+}
+.modal-news-video-fallback p{color:rgba(255,255,255,.75); font-size:13px; line-height:1.5; max-width:380px;}
 .modal-news-body{padding:24px 26px 26px;}
 .modal-news-body h3{font-size:21px; margin-bottom:14px;}
 .modal-news-content{color:var(--ink-600); font-size:14.5px; line-height:1.7; white-space:pre-wrap;}
@@ -535,15 +562,15 @@ tr:hover td{background:var(--blue-100);}
         <button class="btn btn-primary btn-block" id="retry-btn">Tentar novamente</button>
       </div>
 
-      <form id="login-form" class="hidden">
+      <form id="login-form" class="hidden" autocomplete="on">
         <div class="field">
           <label for="login-input">Login</label>
-          <input id="login-input" autocomplete="username" placeholder="Seu login ou RA" required>
+          <input id="login-input" name="username" autocomplete="username" placeholder="Seu login ou RA" required>
         </div>
         <div class="field">
           <label for="senha-input">Senha</label>
           <div class="password-wrap">
-            <input id="senha-input" type="password" autocomplete="current-password" placeholder="••••••••" required>
+            <input id="senha-input" name="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
             <button type="button" class="pw-toggle" data-toggle-password="senha-input" aria-label="Mostrar senha">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
@@ -603,7 +630,7 @@ tr:hover td{background:var(--blue-100);}
    ISACBUCKS — index.html único (HTML + CSS + JS)
    Banco de dados: pensado para 1 banco de dados (Google Sheets) / 1 aba,
    com colunas: id, tipo, nome, ra, login, senha, turma, saldo,
-   status, titulo, imagem.
+   status, titulo, imagem, conteudo, video.
 
    INTEGRAÇÃO COM GOOGLE SHEETS (Apps Script)
    -------------------------------------------------------------
@@ -639,18 +666,19 @@ tr:hover td{background:var(--blue-100);}
 ============================================================ */
 
 const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbw3jirfbDg8cmlZv9HMwN2rnYV4zIBUiuK0cK8wrI2BZCcSiXXL8ohnBCWBK3SuToz0/exec",
+  API_URL: "https://script.google.com/macros/s/AKfycbwwSqEM1TRT6kLDt07pZeQl3g4wlEvx3xLZh5-W6ZCPaV83mcDGDZcFbmhTzksdCauc/exec",
 };
 
 const DEMO_ROWS = [
-  { id:1, tipo:'admin',     nome:'Administrador',   ra:'',           login:'admin',     senha:'1234', turma:'',    saldo:0,   status:'ATIVO',              titulo:'', imagem:'', conteudo:'' },
-  { id:2, tipo:'professor', nome:'Professor Teste',  ra:'',           login:'professor', senha:'1234', turma:'',    saldo:500, status:'ATIVO',              titulo:'', imagem:'', conteudo:'' },
-  { id:3, tipo:'aluno',     nome:'João Silva',       ra:'1105268743', login:'1105268743',senha:'1234', turma:'3º A',saldo:150, status:'ATIVO',              titulo:'', imagem:'', conteudo:'' },
-  { id:4, tipo:'aluno',     nome:'Maria Souza',      ra:'1105268744', login:'1105268744',senha:'1234', turma:'3º A',saldo:80,  status:'ATIVO',              titulo:'', imagem:'', conteudo:'' },
-  { id:5, tipo:'professor', nome:'Carla Mendes',     ra:'',           login:'carla',     senha:'1234', turma:'',    saldo:0,   status:'AGUARDANDO_APROVACAO', titulo:'', imagem:'', conteudo:'' },
+  { id:1, tipo:'admin',     nome:'Administrador',   ra:'',           login:'admin',     senha:'1234', turma:'',    saldo:0,   status:'ATIVO',              titulo:'', imagem:'', conteudo:'', video:'' },
+  { id:2, tipo:'professor', nome:'Professor Teste',  ra:'',           login:'professor', senha:'1234', turma:'',    saldo:500, status:'ATIVO',              titulo:'', imagem:'', conteudo:'', video:'' },
+  { id:3, tipo:'aluno',     nome:'João Silva',       ra:'1105268743', login:'1105268743',senha:'1234', turma:'3º A',saldo:150, status:'ATIVO',              titulo:'', imagem:'', conteudo:'', video:'' },
+  { id:4, tipo:'aluno',     nome:'Maria Souza',      ra:'1105268744', login:'1105268744',senha:'1234', turma:'3º A',saldo:80,  status:'ATIVO',              titulo:'', imagem:'', conteudo:'', video:'' },
+  { id:5, tipo:'professor', nome:'Carla Mendes',     ra:'',           login:'carla',     senha:'1234', turma:'',    saldo:0,   status:'AGUARDANDO_APROVACAO', titulo:'', imagem:'', conteudo:'', video:'' },
   { id:6, tipo:'noticia',   nome:'',                 ra:'',           login:'',          senha:'',     turma:'',    saldo:0,   status:'ATIVO',
     titulo:'Bem-vindo ao IsacBucks!', imagem:'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&q=60',
-    conteudo:'Essa é a plataforma onde você acompanha suas IsacBucks, as moedas que a escola usa para reconhecer o seu esforço. Fique de olho nas notícias por aqui para saber de novidades, eventos e promoções.' },
+    conteudo:'Essa é a plataforma onde você acompanha suas IsacBucks, as moedas que a escola usa para reconhecer o seu esforço. Fique de olho nas notícias por aqui para saber de novidades, eventos e promoções.',
+    video:'' },
 ];
 
 /* ---------- CAMADA DE DADOS (DB) ----------
@@ -789,6 +817,37 @@ function newsImg(imagem){
     onerror="this.onerror=function(){this.onerror=null;this.src='${IMG_FALLBACK}';};this.src='${proxied}';">`;
 }
 
+/* ---------- Vídeo da notícia ----------
+   Aceita link do YouTube (qualquer formato: watch, youtu.be, shorts, embed),
+   link do Vimeo, link de post/reel do Instagram, link de compartilhamento
+   do Google Drive (convertido automaticamente pro formato de visualização
+   embutida), ou link direto de arquivo de vídeo (.mp4/.webm/.ogg/.mov).
+   Retorna null se o link não for reconhecido, e nesse caso a notícia
+   simplesmente não mostra vídeo. */
+function videoEmbedInfo(url){
+  if(!url) return null;
+  const v = url.trim();
+  let m;
+  if((m = v.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/))){
+    return { tipo:'youtube', embed:`https://www.youtube.com/embed/${m[1]}`, watch:`https://www.youtube.com/watch?v=${m[1]}` };
+  }
+  if((m = v.match(/vimeo\.com\/(?:video\/)?(\d+)/))){
+    return { tipo:'vimeo', embed:`https://player.vimeo.com/video/${m[1]}`, watch:`https://vimeo.com/${m[1]}` };
+  }
+  if((m = v.match(/instagram\.com\/(p|reel|tv)\/([\w-]+)/i))){
+    return { tipo:'instagram', embed:`https://www.instagram.com/${m[1]}/${m[2]}/embed`, watch:`https://www.instagram.com/${m[1]}/${m[2]}/` };
+  }
+  if((m = v.match(/drive\.google\.com\/file\/d\/([\w-]+)/)) ||
+     (m = v.match(/drive\.google\.com\/open\?id=([\w-]+)/)) ||
+     (m = v.match(/[?&]id=([\w-]+)/))){
+    return { tipo:'drive', embed:`https://drive.google.com/file/d/${m[1]}/preview`, watch:`https://drive.google.com/file/d/${m[1]}/view` };
+  }
+  if(/\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(v)){
+    return { tipo:'arquivo', embed:v, watch:v };
+  }
+  return null;
+}
+
 function toast(msg, type='success'){
   const wrap = $('#toast-wrap');
   const el = document.createElement('div');
@@ -918,7 +977,7 @@ $('#open-cadastro-aluno').addEventListener('click', ()=>{
       <div class="field"><label>Nome completo</label><input id="ca-nome" required></div>
       <div class="field"><label>RA</label><input id="ca-ra" placeholder="Ex: 1105268743" required></div>
       <div class="field"><label>Turma</label><input id="ca-turma" placeholder="Ex: 2B, 1A, 9B" required></div>
-      <div class="field"><label>Senha</label><div class="password-wrap"><input id="ca-senha" type="password" required><button type="button" class="pw-toggle" data-toggle-password="ca-senha" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
+      <div class="field"><label>Senha</label><div class="password-wrap"><input id="ca-senha" name="new-password" type="password" autocomplete="new-password" required><button type="button" class="pw-toggle" data-toggle-password="ca-senha" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
         <button type="submit" class="btn btn-primary">Criar conta</button>
@@ -933,7 +992,7 @@ $('#open-cadastro-aluno').addEventListener('click', ()=>{
     const senha = $('#ca-senha').value;
     if(!nome || !ra || !turma || !senha) return;
     if(DB.findByLogin(ra)){ toast('Este RA já está cadastrado.', 'error'); return; }
-    DB.insert({ tipo:'aluno', nome, ra, login:ra, senha, turma, saldo:0, status:'ATIVO', titulo:'', imagem:'', conteudo:'' });
+    DB.insert({ tipo:'aluno', nome, ra, login:ra, senha, turma, saldo:0, status:'ATIVO', titulo:'', imagem:'', conteudo:'', video:'' });
     closeModal();
     toast('Conta criada! Você já pode entrar com seu RA e senha.');
   });
@@ -946,7 +1005,7 @@ $('#open-cadastro-professor').addEventListener('click', ()=>{
     <form id="form-cadastro-prof">
       <div class="field"><label>Nome completo</label><input id="cp-nome" required></div>
       <div class="field"><label>Login desejado</label><input id="cp-login" required></div>
-      <div class="field"><label>Senha</label><div class="password-wrap"><input id="cp-senha" type="password" required><button type="button" class="pw-toggle" data-toggle-password="cp-senha" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
+      <div class="field"><label>Senha</label><div class="password-wrap"><input id="cp-senha" name="new-password" type="password" autocomplete="new-password" required><button type="button" class="pw-toggle" data-toggle-password="cp-senha" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
         <button type="submit" class="btn btn-primary">Solicitar cadastro</button>
@@ -960,7 +1019,7 @@ $('#open-cadastro-professor').addEventListener('click', ()=>{
     const senha = $('#cp-senha').value;
     if(!nome || !login || !senha) return;
     if(DB.findByLogin(login)){ toast('Este login já está em uso.', 'error'); return; }
-    DB.insert({ tipo:'professor', nome, ra:'', login, senha, turma:'', saldo:0, status:'AGUARDANDO_APROVACAO', titulo:'', imagem:'', conteudo:'' });
+    DB.insert({ tipo:'professor', nome, ra:'', login, senha, turma:'', saldo:0, status:'AGUARDANDO_APROVACAO', titulo:'', imagem:'', conteudo:'', video:'' });
     closeModal();
     toast('Cadastro enviado! Aguarde a aprovação do administrador.');
   });
@@ -1175,7 +1234,10 @@ function newsGrid(limit){
   if(!items.length) return `<div class="empty-state"><div class="coin">IB</div>Nenhuma notícia no momento.</div>`;
   return `<div class="news-grid">${items.map(n=>`
     <div class="news-card" data-action="ver-noticia" data-id="${n.id}">
-      ${newsImg(n.imagem)}
+      <div class="news-img-wrap">
+        ${newsImg(n.imagem)}
+        ${videoEmbedInfo(n.video) ? `<div class="news-play-badge"><span>▶</span></div>` : ''}
+      </div>
       <div class="news-body"><div class="news-title">${esc(n.titulo)}</div></div>
     </div>
   `).join('')}</div>`;
@@ -1198,9 +1260,9 @@ function renderPerfil(){
       <div class="card">
         <h3>Alterar senha</h3>
         <form id="form-senha">
-          <div class="field"><label>Senha atual</label><div class="password-wrap"><input type="password" id="senha-atual" required><button type="button" class="pw-toggle" data-toggle-password="senha-atual" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
-          <div class="field"><label>Nova senha</label><div class="password-wrap"><input type="password" id="senha-nova" required><button type="button" class="pw-toggle" data-toggle-password="senha-nova" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
-          <div class="field"><label>Confirmar nova senha</label><div class="password-wrap"><input type="password" id="senha-conf" required><button type="button" class="pw-toggle" data-toggle-password="senha-conf" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
+          <div class="field"><label>Senha atual</label><div class="password-wrap"><input type="password" id="senha-atual" name="current-password" autocomplete="current-password" required><button type="button" class="pw-toggle" data-toggle-password="senha-atual" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
+          <div class="field"><label>Nova senha</label><div class="password-wrap"><input type="password" id="senha-nova" name="new-password" autocomplete="new-password" required><button type="button" class="pw-toggle" data-toggle-password="senha-nova" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
+          <div class="field"><label>Confirmar nova senha</label><div class="password-wrap"><input type="password" id="senha-conf" name="new-password-confirm" autocomplete="new-password" required><button type="button" class="pw-toggle" data-toggle-password="senha-conf" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
           <button class="btn btn-primary btn-block" type="submit">Salvar nova senha</button>
         </form>
       </div>
@@ -1430,7 +1492,10 @@ function renderAdminNoticias(){
     <div class="news-grid">${noticias.map(n=>`
       <div class="news-card">
         <div data-action="ver-noticia" data-id="${n.id}">
-          ${newsImg(n.imagem)}
+          <div class="news-img-wrap">
+            ${newsImg(n.imagem)}
+            ${videoEmbedInfo(n.video) ? `<div class="news-play-badge"><span>▶</span></div>` : ''}
+          </div>
           <div class="news-body" style="padding-bottom:4px;"><div class="news-title">${esc(n.titulo)}</div></div>
         </div>
         <div class="news-body" style="padding-top:0;">
@@ -1537,7 +1602,7 @@ function modalEditarUsuario(user, forcedTipo){
       ${tipo==='aluno' ? `<div class="field"><label>RA</label><input id="fu-ra" value="${esc(user?.ra||'')}" required></div>` : ''}
       <div class="field"><label>Login</label><input id="fu-login" value="${esc(user?.login||'')}" required></div>
       ${tipo==='aluno' ? `<div class="field"><label>Turma</label><input id="fu-turma" value="${esc(user?.turma||'')}" required></div>` : ''}
-      ${!isEdit ? `<div class="field"><label>Senha inicial</label><div class="password-wrap"><input id="fu-senha" type="password" required><button type="button" class="pw-toggle" data-toggle-password="fu-senha" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>` : ''}
+      ${!isEdit ? `<div class="field"><label>Senha inicial</label><div class="password-wrap"><input id="fu-senha" type="password" autocomplete="off" required><button type="button" class="pw-toggle" data-toggle-password="fu-senha" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>` : ''}
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
         <button type="submit" class="btn btn-primary">${isEdit?'Salvar':'Criar'}</button>
@@ -1557,7 +1622,7 @@ function modalEditarUsuario(user, forcedTipo){
       toast('Usuário atualizado.');
     } else {
       const senha = $('#fu-senha').value;
-      DB.insert({ tipo, nome, ra, login, senha, turma, saldo:0, status:'ATIVO', titulo:'', imagem:'', conteudo:'' });
+      DB.insert({ tipo, nome, ra, login, senha, turma, saldo:0, status:'ATIVO', titulo:'', imagem:'', conteudo:'', video:'' });
       toast('Usuário criado.');
     }
     closeModal(); render();
@@ -1595,7 +1660,7 @@ function modalAlterarSaldo(user){
 function modalResetSenha(user){
   openModal(`
     <h3>Resetar senha — ${esc(user.nome)}</h3>
-    <div class="field"><label>Nova senha</label><div class="password-wrap"><input id="rs-senha" type="password" required><button type="button" class="pw-toggle" data-toggle-password="rs-senha" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
+    <div class="field"><label>Nova senha</label><div class="password-wrap"><input id="rs-senha" type="password" autocomplete="off" required><button type="button" class="pw-toggle" data-toggle-password="rs-senha" aria-label="Mostrar senha">${eyeIcon()}</button></div></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" id="rs-confirmar">Resetar senha</button>
@@ -1679,6 +1744,11 @@ function modalNoticia(n){
       <label>Conteúdo</label>
       <textarea id="nt-conteudo" rows="5" placeholder="Escreva aqui o texto completo da notícia, que aparece quando o usuário abrir/maximizar o card...">${esc(n?.conteudo||'')}</textarea>
     </div>
+    <div class="field">
+      <label>URL do vídeo (opcional)</label>
+      <input id="nt-video" value="${esc(n?.video||'')}" placeholder="https://youtube.com/... ou link direto .mp4">
+      <p style="font-size:12px; color:var(--ink-400); margin-top:6px; line-height:1.5;">Aceita link do YouTube, Vimeo, Instagram (post ou reel), link de compartilhamento do Google Drive, ou link direto de arquivo de vídeo (.mp4). Se preenchido, o vídeo aparece no lugar da imagem quando a notícia é aberta. Para vídeos do Drive, o arquivo precisa estar compartilhado como "Qualquer pessoa com o link". Posts do Instagram precisam ser públicos.</p>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" id="nt-confirmar">${isEdit?'Salvar':'Publicar'}</button>
@@ -1688,25 +1758,49 @@ function modalNoticia(n){
     const titulo = $('#nt-titulo').value.trim();
     const imagem = $('#nt-imagem').value.trim();
     const conteudo = $('#nt-conteudo').value.trim();
+    const video = $('#nt-video').value.trim();
     if(!titulo || !imagem){ toast('Preencha todos os campos.', 'error'); return; }
-    if(isEdit){ DB.update(n.id, { titulo, imagem, conteudo }); }
-    else { DB.insert({ tipo:'noticia', nome:'', ra:'', login:'', senha:'', turma:'', saldo:0, status:'ATIVO', titulo, imagem, conteudo }); }
+    if(video && !videoEmbedInfo(video)){ toast('Link de vídeo não reconhecido. Use YouTube, Vimeo ou um link direto de arquivo.', 'error'); return; }
+    if(isEdit){ DB.update(n.id, { titulo, imagem, conteudo, video }); }
+    else { DB.insert({ tipo:'noticia', nome:'', ra:'', login:'', senha:'', turma:'', saldo:0, status:'ATIVO', titulo, imagem, conteudo, video }); }
     closeModal(); render();
     toast('Notícia salva.');
   });
 }
 /* ---------- MODAL: ver notícia (maximizada) ---------- */
 function modalVerNoticia(n){
-  const url = normalizeImgUrl(n.imagem);
-  const proxied = url ? esc(proxyImgUrl(url)) : '';
-  const imgHtml = url
-    ? `<img class="modal-news-img" src="${esc(url)}" alt="" onerror="this.onerror=function(){this.onerror=null;this.src='${IMG_FALLBACK}';};this.src='${proxied}';">`
-    : `<div class="modal-news-img"></div>`;
+  const vid = videoEmbedInfo(n.video);
+  const isFileProtocol = location.protocol === 'file:';
+  let midiaHtml;
+  if(vid && vid.tipo==='arquivo'){
+    midiaHtml = `<div class="modal-news-video"><video src="${esc(vid.embed)}" controls playsinline></video></div>`;
+  } else if(vid && isFileProtocol){
+    /* Rodando via file:// (arquivo aberto direto do computador): o
+       navegador não envia referrer nenhum, e o YouTube/Vimeo/Drive
+       recusam mostrar o player embutido nesse caso (erro 153 e
+       parecidos). Em vez de mostrar a tela de erro, oferece um botão
+       que abre o vídeo direto no site de origem, em outra aba. */
+    midiaHtml = `<div class="modal-news-video modal-news-video-fallback">
+      <div class="video-fallback-icon">▶</div>
+      <p>O player embutido não funciona quando a página é aberta direto do computador (file://). Hospede o arquivo em um site (ex: GitHub Pages) para o vídeo tocar direto na notícia.</p>
+      <a class="btn btn-primary" href="${esc(vid.watch)}" target="_blank" rel="noopener">Assistir vídeo</a>
+    </div>`;
+  } else if(vid){
+    const vClass = vid.tipo==='instagram' ? 'modal-news-video modal-news-video-instagram' : 'modal-news-video';
+    midiaHtml = `<div class="${vClass}"><iframe src="${esc(vid.embed)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
+  } else {
+    const url = normalizeImgUrl(n.imagem);
+    const proxied = url ? esc(proxyImgUrl(url)) : '';
+    midiaHtml = url
+      ? `<img class="modal-news-img" src="${esc(url)}" alt="" onerror="this.onerror=function(){this.onerror=null;this.src='${IMG_FALLBACK}';};this.src='${proxied}';">`
+      : `<div class="modal-news-img"></div>`;
+  }
   openModal(`
-    ${imgHtml}
+    ${midiaHtml}
     <div class="modal-news-body">
       <h3>${esc(n.titulo)}</h3>
       <div class="modal-news-content">${n.conteudo ? esc(n.conteudo) : '<em style="color:var(--ink-400);">Sem conteúdo adicional.</em>'}</div>
+      ${vid && !isFileProtocol && vid.tipo!=='arquivo' ? `<a href="${esc(vid.watch)}" target="_blank" rel="noopener" style="display:block; font-size:12.5px; color:var(--ink-400); margin-top:-6px; margin-bottom:16px;">O vídeo não carregou? Assista na fonte original ↗</a>` : ''}
       <div class="modal-actions">
         <button class="btn btn-ghost btn-block" onclick="closeModal()">Fechar</button>
       </div>
