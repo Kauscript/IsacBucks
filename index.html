@@ -1068,6 +1068,7 @@ const MENUS = {
   professor: [
     { id:'dashboard', label:'Meu saldo', icon:'●' },
     { id:'transferir', label:'Adicionar / Descontar', icon:'⇄' },
+    { id:'noticias', label:'Notícias', icon:'▤' },
     { id:'perfil', label:'Meu perfil', icon:'◐' },
   ],
   admin: [
@@ -1167,7 +1168,7 @@ document.addEventListener('click', (e)=>{
 function render(){
   const fn = {
     aluno: { dashboard: renderAlunoDashboard, noticias: renderNoticiasView, perfil: renderPerfil },
-    professor: { dashboard: renderProfessorDashboard, transferir: renderTransferir, perfil: renderPerfil },
+    professor: { dashboard: renderProfessorDashboard, transferir: renderTransferir, noticias: renderNoticiasView, perfil: renderPerfil },
     admin: { dashboard: renderAdminDashboard, alunos: renderAdminAlunos, professores: renderAdminProfessores,
               aprovacoes: renderAprovacoes, noticias: renderAdminNoticias, administradores: renderAdminAdmins },
   }[state.user.tipo][state.screen];
@@ -1296,6 +1297,7 @@ function renderProfessorDashboard(){
         <div class="quick-actions">
           <button class="qa-btn" data-goto="transferir"><span class="qa-ico">➕</span><span class="qa-label">Adicionar</span></button>
           <button class="qa-btn" data-goto="transferir"><span class="qa-ico">➖</span><span class="qa-label">Descontar</span></button>
+          <button class="qa-btn" data-goto="noticias"><span class="qa-ico">▤</span><span class="qa-label">Notícias</span></button>
           <button class="qa-btn" data-goto="perfil"><span class="qa-ico">◐</span><span class="qa-label">Perfil</span></button>
           <button class="qa-btn" data-logout><span class="qa-ico">⎋</span><span class="qa-label">Sair</span></button>
         </div>
