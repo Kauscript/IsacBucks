@@ -25,11 +25,21 @@ function wireScreen(){
   wireAlunoAutocomplete('add-login', 'add-login-suggest');
   wireAlunoAutocomplete('desc-login', 'desc-login-suggest');
 
-  // Salas (professor/admin): expandir/recolher cada turma
-  $('#main').querySelectorAll('[data-toggle-sala]').forEach(btn=>{
+  // Salas (professor/admin): expandir/recolher cada turma, tipo sanfona
+  // (abrir uma sala fecha as outras que estavam abertas, evitando várias
+  // caixas abertas ao mesmo tempo ocupando a tela, principalmente no celular)
+  const botoesSala = $('#main').querySelectorAll('[data-toggle-sala]');
+  botoesSala.forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      btn.classList.toggle('open');
-      btn.nextElementSibling.classList.toggle('hidden');
+      const jaAberta = !btn.nextElementSibling.classList.contains('hidden');
+      botoesSala.forEach(outro=>{
+        outro.classList.remove('open');
+        outro.nextElementSibling.classList.add('hidden');
+      });
+      if(!jaAberta){
+        btn.classList.add('open');
+        btn.nextElementSibling.classList.remove('hidden');
+      }
     });
   });
 
